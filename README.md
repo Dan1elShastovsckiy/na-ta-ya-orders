@@ -55,7 +55,7 @@
 ## 🚀 Установка и запуск
 
 ### 1. Клонирование репозитория
-```bash
+
 git clone https://github.com/ваш-юзернейм/nataya-digital-menu.git
 cd nataya-digital-menu
 
