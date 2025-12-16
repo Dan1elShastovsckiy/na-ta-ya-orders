@@ -1,0 +1,14 @@
+[build]
+  # Команда для сборки проекта (та же, что и npm run build)
+  command = "npm run build"
+  # Папка, в которую Vite складывает готовые файлы
+  publish = "dist"
+
+[dev]
+  command = "npm run dev"
+
+[[redirects]]
+  # Это нужно для React Router (Single Page App), чтобы при обновлении страницы не было 404 ошибки
+  from = "/*"
+  to = "/index.html"
+  status = 200
