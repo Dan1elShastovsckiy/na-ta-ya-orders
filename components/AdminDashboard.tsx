@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { MenuItem, Category, LanguageCode } from '../types';
 import { ADMIN_USER, ADMIN_PASS } from '../constants';
-import { Plus, Edit2, Save, X, Image as ImageIcon, Eye, EyeOff } from 'lucide-react';
+import { Plus, Edit2, Save, X, Image as ImageIcon, Eye, EyeOff, List, Utensils } from 'lucide-react';
 
 interface Props {
   menuItems: MenuItem[];
@@ -32,8 +32,16 @@ export const AdminDashboard: React.FC<Props> = ({
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  
+  // Dashboard Views
+  const [activeTab, setActiveTab] = useState<'dishes' | 'categories'>('dishes');
+
+  // Item Editing State
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
+
+  // Category Management State
+  const [newCategoryName, setNewCategoryName] = useState({ th: '', en: '', ru: '', zh: '' });
 
   // Login Screen
   if (!isAuthenticated) {
@@ -121,6 +129,20 @@ export const AdminDashboard: React.FC<Props> = ({
       ? current.filter(id => id !== catId)
       : [...current, catId];
     setEditingItem({ ...editingItem, categoryIds: updated });
+  };
+
+  const handleAddCategory = () => {
+    if (!newCategoryName.en) return alert("English name required for ID generation");
+    
+    const id = newCategoryName.en.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+    const newCat: Category = {
+      id,
+      name: { ...newCategoryName }
+    };
+    
+    onUpdateCategories([...categories, newCat]);
+    setNewCategoryName({ th: '', en: '', ru: '', zh: '' });
+    alert("Category Added!");
   };
 
   // --- ITEM EDITOR FORM ---
@@ -246,63 +268,120 @@ export const AdminDashboard: React.FC<Props> = ({
   // --- DASHBOARD LIST ---
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow px-6 py-4 flex justify-between items-center sticky top-0 z-20">
+      <header className="bg-white shadow px-6 py-4 flex flex-col md:flex-row justify-between items-center sticky top-0 z-20 gap-4">
         <div>
            <h1 className="text-2xl font-bold text-gray-800">Admin Dashboard</h1>
-           <p className="text-sm text-gray-500">{menuItems.length} items total</p>
+           <div className="flex gap-4 mt-2">
+              <button 
+                onClick={() => setActiveTab('dishes')}
+                className={`text-sm font-bold flex items-center gap-2 ${activeTab === 'dishes' ? 'text-orange-600 underline' : 'text-gray-500'}`}
+              >
+                <Utensils size={16} /> Menu Items
+              </button>
+              <button 
+                onClick={() => setActiveTab('categories')}
+                className={`text-sm font-bold flex items-center gap-2 ${activeTab === 'categories' ? 'text-orange-600 underline' : 'text-gray-500'}`}
+              >
+                <List size={16} /> Manage Categories
+              </button>
+           </div>
         </div>
         <div className="flex gap-4">
-           <button onClick={onExit} className="text-gray-500 hover:text-gray-800">Exit Admin</button>
-           <button onClick={handleStartAdd} className="bg-orange-600 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-orange-700">
-             <Plus size={18} /> Add Dish
-           </button>
+           <button onClick={onExit} className="text-gray-500 hover:text-gray-800">Exit</button>
+           {activeTab === 'dishes' && (
+             <button onClick={handleStartAdd} className="bg-orange-600 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-orange-700">
+               <Plus size={18} /> Add Dish
+             </button>
+           )}
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto p-6">
-        <div className="grid grid-cols-1 gap-4">
-          {menuItems.map(item => (
-            <div key={item.id} className={`bg-white p-4 rounded-lg shadow-sm border flex items-center gap-4 ${item.isHidden ? 'opacity-60 bg-gray-100' : ''}`}>
-               <div className="w-16 h-16 bg-gray-200 rounded-md overflow-hidden shrink-0">
-                  <img src={item.image} className="w-full h-full object-cover" alt={item.name.en} />
+        
+        {/* CATEGORY MANAGER */}
+        {activeTab === 'categories' && (
+          <div className="max-w-2xl mx-auto">
+             <div className="bg-white p-6 rounded-xl shadow-sm border mb-6">
+               <h3 className="font-bold text-lg mb-4">Add New Category</h3>
+               <div className="grid grid-cols-2 gap-4 mb-4">
+                 {(['th', 'en', 'ru', 'zh'] as LanguageCode[]).map(lang => (
+                   <div key={lang}>
+                     <label className="text-xs font-bold text-gray-500 uppercase">{lang} Name</label>
+                     <input 
+                        value={newCategoryName[lang]}
+                        onChange={e => setNewCategoryName({...newCategoryName, [lang]: e.target.value})}
+                        className="input-field"
+                        placeholder={`${lang} Label`}
+                     />
+                   </div>
+                 ))}
                </div>
-               
-               <div className="flex-1">
-                 <div className="flex items-center gap-2">
-                    <h3 className="font-bold text-gray-800">{item.name.en}</h3>
-                    {item.isHidden && <span className="text-xs bg-gray-500 text-white px-2 py-0.5 rounded">HIDDEN</span>}
-                 </div>
-                 <p className="text-sm text-gray-500 font-thai">{item.name.th}</p>
-                 <div className="flex gap-2 mt-1">
-                   {item.categoryIds?.map(catId => (
-                     <span key={catId} className="text-xs bg-orange-100 text-orange-600 px-2 rounded-full">
-                       {categories.find(c => c.id === catId)?.name.en || catId}
-                     </span>
-                   ))}
-                 </div>
-               </div>
+               <button onClick={handleAddCategory} className="w-full bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-700">
+                 Create Category
+               </button>
+             </div>
 
-               <div className="font-bold text-gray-700">฿{item.price}</div>
+             <div className="space-y-2">
+               <h3 className="font-bold text-gray-700">Existing Categories</h3>
+               {categories.map(cat => (
+                 <div key={cat.id} className="bg-white p-3 rounded shadow-sm border flex justify-between">
+                    <div>
+                      <span className="font-bold text-gray-800 mr-2">{cat.name.en}</span>
+                      <span className="text-gray-500 text-sm">({cat.name.th} / {cat.name.ru} / {cat.name.zh})</span>
+                    </div>
+                    <code className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-500">{cat.id}</code>
+                 </div>
+               ))}
+             </div>
+          </div>
+        )}
 
-               <div className="flex items-center gap-2">
-                  <button 
-                    onClick={() => handleToggleHide(item.id)}
-                    className={`p-2 rounded-full ${item.isHidden ? 'text-gray-400 hover:text-gray-600' : 'text-green-600 hover:bg-green-50'}`}
-                    title={item.isHidden ? "Unhide" : "Hide"}
-                  >
-                    {item.isHidden ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
-                  <button 
-                    onClick={() => handleStartEdit(item)}
-                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-full"
-                    title="Edit"
-                  >
-                    <Edit2 size={20} />
-                  </button>
-               </div>
-            </div>
-          ))}
-        </div>
+        {/* MENU ITEMS LIST */}
+        {activeTab === 'dishes' && (
+          <div className="grid grid-cols-1 gap-4">
+            {menuItems.map(item => (
+              <div key={item.id} className={`bg-white p-4 rounded-lg shadow-sm border flex items-center gap-4 ${item.isHidden ? 'opacity-60 bg-gray-100' : ''}`}>
+                <div className="w-16 h-16 bg-gray-200 rounded-md overflow-hidden shrink-0">
+                    <img src={item.image} className="w-full h-full object-cover" alt={item.name.en} />
+                </div>
+                
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-gray-800">{item.name.en}</h3>
+                      {item.isHidden && <span className="text-xs bg-gray-500 text-white px-2 py-0.5 rounded">HIDDEN</span>}
+                  </div>
+                  <p className="text-sm text-gray-500 font-thai">{item.name.th}</p>
+                  <div className="flex gap-2 mt-1">
+                    {item.categoryIds?.map(catId => (
+                      <span key={catId} className="text-xs bg-orange-100 text-orange-600 px-2 rounded-full">
+                        {categories.find(c => c.id === catId)?.name.en || catId}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="font-bold text-gray-700">฿{item.price}</div>
+
+                <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => handleToggleHide(item.id)}
+                      className={`p-2 rounded-full ${item.isHidden ? 'text-gray-400 hover:text-gray-600' : 'text-green-600 hover:bg-green-50'}`}
+                      title={item.isHidden ? "Unhide" : "Hide"}
+                    >
+                      {item.isHidden ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                    <button 
+                      onClick={() => handleStartEdit(item)}
+                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-full"
+                      title="Edit"
+                    >
+                      <Edit2 size={20} />
+                    </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </main>
       
       <style>{`

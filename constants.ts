@@ -25,6 +25,7 @@ export const UI_LABELS: Record<string, LocalizedString> = {
 };
 
 export const INITIAL_CATEGORIES: Category[] = [
+  { id: 'drinks', name: { th: 'เครื่องดื่ม', en: 'Drinks', ru: 'Напитки', zh: '饮料' } },
   { id: 'crab', name: { th: 'เมนูปู', en: 'Crab', ru: 'Краб', zh: '螃蟹' } },
   { id: 'isan', name: { th: 'อีสาน/ส้มตำ', en: 'Isan/Som Tum', ru: 'Исан/Салаты', zh: '伊森/沙拉' } },
   { id: 'southern', name: { th: 'อาหารปักษ์ใต้', en: 'Southern Food', ru: 'Южная кухня', zh: '南部菜' } },
@@ -35,6 +36,44 @@ export const INITIAL_CATEGORIES: Category[] = [
 
 // Migrated to array categories
 export const INITIAL_MENU_ITEMS: MenuItem[] = [
+  // --- DRINKS ---
+  {
+    id: 'd1',
+    categoryIds: ['drinks'],
+    name: { th: 'น้ำมะนาวโซดา', en: 'Lime Soda', ru: 'Лайм Сода', zh: '青柠苏打水' },
+    description: { th: 'น้ำมะนาวโซดาสดชื่น', en: 'Refreshing lime soda.', ru: 'Освежающая газировка с лаймом.', zh: '清爽的青柠苏打水。' },
+    price: 60,
+    image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=800&q=80',
+    isSpicy: false
+  },
+  {
+    id: 'd2',
+    categoryIds: ['drinks'],
+    name: { th: 'มะพร้าวน้ำหอม', en: 'Fresh Coconut', ru: 'Свежий кокос', zh: '新鲜椰子' },
+    description: { th: 'มะพร้าวน้ำหอมเย็นชื่นใจ', en: 'Fresh young coconut.', ru: 'Молодой кокос.', zh: '新鲜嫩椰子。' },
+    price: 70,
+    image: 'https://images.unsplash.com/photo-1525385133512-2f346b384338?auto=format&fit=crop&w=800&q=80',
+    isSpicy: false
+  },
+  {
+    id: 'd3',
+    categoryIds: ['drinks'],
+    name: { th: 'ชาไทยเย็น', en: 'Thai Iced Tea', ru: 'Тайский чай', zh: '泰式奶茶' },
+    description: { th: 'ชาไทยใส่นมหวานมัน', en: 'Traditional Thai milk tea.', ru: 'Традиционный тайский чай.', zh: '传统泰式奶茶。' },
+    price: 60,
+    image: 'https://images.unsplash.com/photo-1595981266686-0cf387d0a608?auto=format&fit=crop&w=800&q=80',
+    isSpicy: false
+  },
+  {
+    id: 'd4',
+    categoryIds: ['drinks'],
+    name: { th: 'น้ำแตงโมปั่น', en: 'Watermelon Smoothie', ru: 'Арбузный смузи', zh: '西瓜冰沙' },
+    description: { th: 'แตงโมปั่นหวานฉ่ำ', en: 'Sweet watermelon frappe.', ru: 'Сладкий арбузный шейк.', zh: '西瓜冰沙。' },
+    price: 60,
+    image: 'https://images.unsplash.com/photo-1589734580265-9a3d1329a208?auto=format&fit=crop&w=800&q=80',
+    isSpicy: false
+  },
+
   // --- CRAB MENU ---
   {
     id: 'c1',

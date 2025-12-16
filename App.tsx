@@ -9,7 +9,6 @@ import {
   INITIAL_MENU_ITEMS, 
   INITIAL_CATEGORIES, 
   UI_LABELS, 
-  APP_NAME,
   TELEGRAM_BOT_TOKEN,
   TELEGRAM_CHAT_ID
 } from './constants';
@@ -22,9 +21,25 @@ import { ShoppingBag, Loader2, Lock, QrCode } from 'lucide-react';
 export default function App() {
   const [lang, setLang] = useState<LanguageCode>('th');
   
-  // Data State
-  const [menuItems, setMenuItems] = useState<MenuItem[]>(INITIAL_MENU_ITEMS);
-  const [categories, setCategories] = useState<Category[]>(INITIAL_CATEGORIES);
+  // Data State with LocalStorage Persistence
+  const [menuItems, setMenuItems] = useState<MenuItem[]>(() => {
+    const saved = localStorage.getItem('nataya_menu_items');
+    return saved ? JSON.parse(saved) : INITIAL_MENU_ITEMS;
+  });
+
+  const [categories, setCategories] = useState<Category[]>(() => {
+    const saved = localStorage.getItem('nataya_categories');
+    return saved ? JSON.parse(saved) : INITIAL_CATEGORIES;
+  });
+
+  // Save to LocalStorage whenever data changes
+  useEffect(() => {
+    localStorage.setItem('nataya_menu_items', JSON.stringify(menuItems));
+  }, [menuItems]);
+
+  useEffect(() => {
+    localStorage.setItem('nataya_categories', JSON.stringify(categories));
+  }, [categories]);
   
   // UI State
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -61,7 +76,10 @@ export default function App() {
       }
     };
 
+    // Run on mount
     handleRouting();
+
+    // Listen for hash changes (Admin toggle)
     window.addEventListener('hashchange', handleRouting);
     return () => window.removeEventListener('hashchange', handleRouting);
   }, []);
@@ -110,7 +128,6 @@ ${itemsList}
     `.trim();
 
     try {
-      // Send to Telegram
       const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -152,8 +169,7 @@ ${itemsList}
         onUpdateItems={setMenuItems}
         onUpdateCategories={setCategories}
         onExit={() => {
-          window.location.hash = '';
-          setIsAdminMode(false);
+          window.location.hash = ''; // This triggers hashchange -> handleRouting -> sets AdminMode false
         }}
       />
     );
@@ -175,12 +191,9 @@ ${itemsList}
         <header className="px-4 py-3 flex justify-between items-center max-w-2xl mx-auto w-full">
           <div className="flex items-center gap-2">
             <div>
-              <h1 className="text-xl font-bold text-gray-800 font-thai tracking-tight leading-none">
-                ร้านอาหาร นาตาย่า
+              <h1 className="text-xl font-bold text-gray-800 tracking-tight leading-none">
+                Na-Ta-Ya Online menu
               </h1>
-              <p className="text-sm font-bold text-orange-600 tracking-wide">
-                NA-TA-YA
-              </p>
             </div>
             {!isOrderingEnabled && (
                <span className="bg-blue-100 text-blue-700 text-[10px] px-2 py-1 rounded-full font-bold uppercase tracking-wider">
@@ -302,7 +315,7 @@ ${itemsList}
          <button 
            onClick={() => {
               window.location.hash = 'admin';
-              window.location.reload();
+              // Hash change triggers handleRouting hook
            }}
            className="opacity-10 hover:opacity-100 pointer-events-auto transition-opacity text-gray-400"
          >
