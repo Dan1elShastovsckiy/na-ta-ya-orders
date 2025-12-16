@@ -1,0 +1,7 @@
+{
+  "name": "Na-Ta-Ya Digital Menu",
+  "description": "A multilingual digital menu for Na-Ta-Ya Restaurant supporting Thai, English, Russian, and Chinese, powered by Gemini for menu digitization.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
