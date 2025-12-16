@@ -16,7 +16,7 @@ import { LanguageSelector } from './components/LanguageSelector';
 import { DishModal } from './components/DishModal';
 import { CartDrawer } from './components/CartDrawer';
 import { AdminDashboard } from './components/AdminDashboard';
-import { ShoppingBag, Loader2, Lock, QrCode } from 'lucide-react';
+import { ShoppingBag, Loader2, Lock, QrCode, MapPin } from 'lucide-react';
 
 export default function App() {
   const [lang, setLang] = useState<LanguageCode>('th');
@@ -182,7 +182,7 @@ ${itemsList}
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       
       {/* Sticky Header Group */}
       <div className="sticky top-0 z-30 bg-gray-50/95 backdrop-blur shadow-sm border-b border-gray-200">
@@ -257,7 +257,7 @@ ${itemsList}
       </div>
 
       {/* Main Content */}
-      <main className="p-4 pt-6 max-w-2xl mx-auto">
+      <main className="p-4 pt-6 max-w-2xl mx-auto flex-grow w-full">
         {!isOrderingEnabled && (
           <div className="mb-6 bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-start gap-3">
              <QrCode className="text-blue-600 shrink-0 mt-1" />
@@ -310,16 +310,37 @@ ${itemsList}
         </div>
       </main>
 
-      {/* Admin Toggle Footer */}
-      <footer className="fixed bottom-0 w-full p-4 flex justify-center pointer-events-none">
+      {/* Footer Info & Admin Toggle - Static/Relative positioning */}
+      <footer className="w-full bg-white border-t border-gray-200 py-8 px-4 flex flex-col items-center justify-center gap-2 text-[10px] text-gray-500 mt-8">
+         <div className="flex flex-wrap justify-center items-center gap-x-2 text-center leading-tight">
+           <a 
+             href="https://seo.shastovsky.ru/" 
+             target="_blank" 
+             rel="noopener noreferrer" 
+             className="hover:text-orange-600 transition-colors font-medium whitespace-nowrap"
+           >
+             Dev by SHASTOVSKY.
+           </a>
+           <span className="text-gray-300">|</span>
+           <a 
+             href="https://maps.app.goo.gl/thCKVxjkbTqUXt1s8" 
+             target="_blank" 
+             rel="noopener noreferrer" 
+             className="hover:text-orange-600 transition-colors flex items-center gap-1"
+           >
+             <MapPin size={10} className="inline" />
+             Ban Krot, Bang Pa-in District, Phra Nakhon Si Ayutthaya 13160
+           </a>
+         </div>
+
          <button 
            onClick={() => {
               window.location.hash = 'admin';
-              // Hash change triggers handleRouting hook
            }}
-           className="opacity-10 hover:opacity-100 pointer-events-auto transition-opacity text-gray-400"
+           className="opacity-20 hover:opacity-100 transition-opacity text-gray-400 mt-2 p-2"
+           aria-label="Admin Access"
          >
-           <Lock size={16} />
+           <Lock size={12} />
          </button>
       </footer>
 
