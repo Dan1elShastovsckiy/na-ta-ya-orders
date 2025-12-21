@@ -1,4 +1,6 @@
+
 // Standard modular Firebase imports for web SDK v9+
+// Fix: Re-asserting the named export 'initializeApp' from the standard 'firebase/app' package.
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, onValue, set } from 'firebase/database';
 import { MenuItem, Category } from '../types';
@@ -23,7 +25,7 @@ const firebaseConfig = {
 let db: any = null;
 try {
   // Инициализация будет работать только если конфиг верный
-  if (firebaseConfig.apiKey !== "AIzaSyC--HfMxrpkZ4RKxtHpS8CljLYj9W-fUcM") {
+  if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "AIzaSyC--HfMxrpkZ4RKxtHpS8CljLYj9W-fUcM") {
     const app = initializeApp(firebaseConfig);
     db = getDatabase(app);
   } else {

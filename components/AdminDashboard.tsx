@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { MenuItem, Category, LanguageCode } from '../types';
 import { ADMIN_USER, ADMIN_PASS } from '../constants';
 import { syncDataWithCloud } from '../services/firebaseService';
-// Added missing RefreshCw import
-import { Plus, Edit2, Save, X, Image as ImageIcon, Eye, EyeOff, List, Utensils, CloudUpload, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+// Fixed: Changed CloudUpload to UploadCloud for better compatibility
+import { Plus, Edit2, Save, X, Image as ImageIcon, Eye, EyeOff, List, Utensils, UploadCloud, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
 
 interface Props {
   menuItems: MenuItem[];
@@ -185,7 +185,7 @@ export const AdminDashboard: React.FC<Props> = ({
               {isSyncing ? <RefreshCw className="animate-spin" size={18} /> : 
                syncStatus === 'success' ? <CheckCircle size={18} /> :
                syncStatus === 'error' ? <AlertCircle size={18} /> :
-               <CloudUpload size={18} />}
+               <UploadCloud size={18} />}
               {isSyncing ? 'Syncing...' : syncStatus === 'success' ? 'Updated!' : syncStatus === 'error' ? 'Failed' : 'Publish Changes'}
             </button>
             <button onClick={() => { handleGlobalSync(); onExit(); }} className="text-gray-500 hover:text-gray-800">Exit</button>
