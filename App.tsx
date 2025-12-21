@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   MenuItem, 
@@ -16,31 +17,40 @@ import { LanguageSelector } from './components/LanguageSelector';
 import { DishModal } from './components/DishModal';
 import { CartDrawer } from './components/CartDrawer';
 import { AdminDashboard } from './components/AdminDashboard';
-import { ShoppingBag, Loader2, Lock, QrCode, MapPin } from 'lucide-react';
+import { subscribeToMenuUpdates } from './services/firebaseService';
+import { ShoppingBag, Loader2, Lock, QrCode, MapPin, RefreshCw } from 'lucide-react';
 
 export default function App() {
   const [lang, setLang] = useState<LanguageCode>('th');
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Data State with LocalStorage Persistence
-  const [menuItems, setMenuItems] = useState<MenuItem[]>(() => {
-    const saved = localStorage.getItem('nataya_menu_items');
-    return saved ? JSON.parse(saved) : INITIAL_MENU_ITEMS;
-  });
+  // Data State
+  const [menuItems, setMenuItems] = useState<MenuItem[]>(INITIAL_MENU_ITEMS);
+  const [categories, setCategories] = useState<Category[]>(INITIAL_CATEGORIES);
 
-  const [categories, setCategories] = useState<Category[]>(() => {
-    const saved = localStorage.getItem('nataya_categories');
-    return saved ? JSON.parse(saved) : INITIAL_CATEGORIES;
-  });
-
-  // Save to LocalStorage whenever data changes
+  // Subscribe to Cloud Updates (Everyone sees this!)
   useEffect(() => {
-    localStorage.setItem('nataya_menu_items', JSON.stringify(menuItems));
-  }, [menuItems]);
+    const unsubscribe = subscribeToMenuUpdates((data) => {
+      if (data.items && data.items.length > 0) {
+        setMenuItems(data.items);
+      }
+      if (data.categories && data.categories.length > 0) {
+        setCategories(data.categories);
+      }
+      setIsLoading(false);
+    });
 
-  useEffect(() => {
-    localStorage.setItem('nataya_categories', JSON.stringify(categories));
-  }, [categories]);
-  
+    // Timeout if cloud takes too long or is not configured
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 2000);
+
+    return () => {
+      unsubscribe();
+      clearTimeout(timer);
+    };
+  }, []);
+
   // UI State
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -53,7 +63,6 @@ export default function App() {
   const [tableNumber, setTableNumber] = useState<string | null>(null);
   const [isOrderingEnabled, setIsOrderingEnabled] = useState(false);
 
-  // Parse URL Parameters for Routing
   useEffect(() => {
     const handleRouting = () => {
       const params = new URLSearchParams(window.location.search);
@@ -69,17 +78,13 @@ export default function App() {
         setIsOrderingEnabled(true);
         setIsAdminMode(false);
       } else {
-        // Public View Mode
         setTableNumber(null);
         setIsOrderingEnabled(false);
         setIsAdminMode(false);
       }
     };
 
-    // Run on mount
     handleRouting();
-
-    // Listen for hash changes (Admin toggle)
     window.addEventListener('hashchange', handleRouting);
     return () => window.removeEventListener('hashchange', handleRouting);
   }, []);
@@ -110,7 +115,6 @@ export default function App() {
     const date = new Date().toLocaleString('en-GB');
     const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-    // Format items list for Telegram
     const itemsList = cart.map(item => 
       `▫️ ${item.quantity}x ${item.name.en} (${item.name.th})\n   ${item.notes ? `📝 Note: ${item.notes}` : ''}`
     ).join('\n');
@@ -134,15 +138,7 @@ ${itemsList}
         body: JSON.stringify({
           chat_id: String(TELEGRAM_CHAT_ID),
           text: message,
-          parse_mode: 'HTML',
-          reply_markup: {
-            inline_keyboard: [
-              [
-                { text: '👨‍🍳 In Progress', callback_data: `status_progress_${orderId}` },
-                { text: '✅ Ready for Client', callback_data: `status_done_${orderId}` }
-              ]
-            ]
-          }
+          parse_mode: 'HTML'
         })
       });
 
@@ -169,7 +165,7 @@ ${itemsList}
         onUpdateItems={setMenuItems}
         onUpdateCategories={setCategories}
         onExit={() => {
-          window.location.hash = ''; // This triggers hashchange -> handleRouting -> sets AdminMode false
+          window.location.hash = '';
         }}
       />
     );
@@ -181,18 +177,23 @@ ${itemsList}
     return item.categoryIds.includes(selectedCategory);
   });
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+        <Loader2 className="animate-spin text-orange-500 mb-4" size={48} />
+        <p className="text-gray-500 font-medium">Loading Menu...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      
-      {/* Sticky Header Group */}
       <div className="sticky top-0 z-30 bg-gray-50/95 backdrop-blur shadow-sm border-b border-gray-200">
-        
-        {/* Top Header */}
         <header className="px-4 py-3 flex justify-between items-center max-w-2xl mx-auto w-full">
           <div className="flex items-center gap-2">
             <div>
               <h1 className="text-xl font-bold text-gray-800 tracking-tight leading-none">
-                Na-Ta-Ya Online menu
+                Na-Ta-Ya Menu
               </h1>
             </div>
             {!isOrderingEnabled && (
@@ -217,7 +218,7 @@ ${itemsList}
               >
                 <ShoppingBag size={22} className="text-gray-700" />
                 {cart.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full animate-bounce-in">
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">
                     {cart.length}
                   </span>
                 )}
@@ -226,7 +227,6 @@ ${itemsList}
           </div>
         </header>
 
-        {/* Categories Bar */}
         <div className="px-4 pb-2 max-w-2xl mx-auto w-full overflow-x-auto no-scrollbar">
           <div className="flex space-x-2 py-1">
             <button
@@ -256,7 +256,6 @@ ${itemsList}
         </div>
       </div>
 
-      {/* Main Content */}
       <main className="p-4 pt-6 max-w-2xl mx-auto flex-grow w-full">
         {!isOrderingEnabled && (
           <div className="mb-6 bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-start gap-3">
@@ -272,7 +271,7 @@ ${itemsList}
           {filteredItems.map(item => (
             <div 
               key={item.id} 
-              className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden active:scale-95 transition-transform duration-200 cursor-pointer"
+              className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden active:scale-95 transition-transform duration-200 cursor-pointer flex flex-col"
               onClick={() => setSelectedDish(item)}
             >
               <div className="aspect-square relative bg-gray-100">
@@ -288,14 +287,14 @@ ${itemsList}
                   </span>
                 )}
               </div>
-              <div className="p-3">
-                <h3 className={`font-bold text-gray-800 text-sm mb-1 line-clamp-2 min-h-[2.5em] ${lang === 'th' ? 'font-thai' : ''}`}>
+              <div className="p-3 flex-grow flex flex-col justify-between">
+                <h3 className={`font-bold text-gray-800 text-sm mb-1 line-clamp-2 ${lang === 'th' ? 'font-thai' : ''}`}>
                   {item.name[lang]}
                 </h3>
                 <div className="flex justify-between items-center mt-2">
                   <span className="text-orange-600 font-bold">฿{item.price}</span>
                   {isOrderingEnabled ? (
-                    <button className="bg-orange-100 text-orange-600 p-1.5 rounded-full hover:bg-orange-200">
+                    <button className="bg-orange-100 text-orange-600 p-1.5 rounded-full">
                       <PlusIcon />
                     </button>
                   ) : (
@@ -310,41 +309,15 @@ ${itemsList}
         </div>
       </main>
 
-      {/* Footer Info & Admin Toggle - Static/Relative positioning */}
       <footer className="w-full bg-white border-t border-gray-200 py-8 px-4 flex flex-col items-center justify-center gap-2 text-[10px] text-gray-500 mt-8">
          <div className="flex flex-wrap justify-center items-center gap-x-2 text-center leading-tight">
-           <a 
-             href="https://seo.shastovsky.ru/" 
-             target="_blank" 
-             rel="noopener noreferrer" 
-             className="hover:text-orange-600 transition-colors font-medium whitespace-nowrap"
-           >
-             Dev by SHASTOVSKY.
-           </a>
+           <a href="https://seo.shastovsky.ru/" target="_blank" rel="noopener noreferrer" className="hover:text-orange-600 font-medium">Dev by SHASTOVSKY</a>
            <span className="text-gray-300">|</span>
-           <a 
-             href="https://maps.app.goo.gl/thCKVxjkbTqUXt1s8" 
-             target="_blank" 
-             rel="noopener noreferrer" 
-             className="hover:text-orange-600 transition-colors flex items-center gap-1"
-           >
-             <MapPin size={10} className="inline" />
-             Ban Krot, Bang Pa-in District, Phra Nakhon Si Ayutthaya 13160
-           </a>
+           <span className="flex items-center gap-1"><MapPin size={10} /> Ban Krot, Bang Pa-in, Ayutthaya</span>
          </div>
-
-         <button 
-           onClick={() => {
-              window.location.hash = 'admin';
-           }}
-           className="opacity-20 hover:opacity-100 transition-opacity text-gray-400 mt-2 p-2"
-           aria-label="Admin Access"
-         >
-           <Lock size={12} />
-         </button>
+         <button onClick={() => window.location.hash = 'admin'} className="opacity-20 hover:opacity-100 p-2"><Lock size={12} /></button>
       </footer>
 
-      {/* Modals */}
       <DishModal 
         isOpen={!!selectedDish}
         onClose={() => setSelectedDish(null)}
@@ -353,7 +326,6 @@ ${itemsList}
         onAddToCart={addToCart}
         isOrderingEnabled={isOrderingEnabled}
       />
-
       <CartDrawer 
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
@@ -365,13 +337,12 @@ ${itemsList}
       
       {isSendingOrder && (
         <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center">
-          <div className="bg-white p-6 rounded-2xl flex flex-col items-center shadow-2xl">
+          <div className="bg-white p-6 rounded-2xl flex flex-col items-center">
             <Loader2 className="animate-spin text-orange-500 mb-4" size={32} />
-            <p className="font-bold text-gray-700">Sending Order...</p>
+            <p className="font-bold text-gray-700">Processing...</p>
           </div>
         </div>
       )}
-
     </div>
   );
 }

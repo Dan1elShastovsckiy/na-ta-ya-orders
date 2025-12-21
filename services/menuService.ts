@@ -1,15 +1,11 @@
-import { GoogleGenAI, Type } from "@google/genai";
+// Use standard modular imports from @google/genai as per current guidelines.
+import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
 import { MenuItem } from '../types';
 
 export const analyzeMenuImage = async (base64Image: string): Promise<MenuItem[]> => {
   try {
-    const apiKey = process.env.API_KEY;
-    if (!apiKey) {
-      console.error("API Key not found");
-      throw new Error("API Key configuration error");
-    }
-
-    const ai = new GoogleGenAI({ apiKey });
+    // Initialize GoogleGenAI using the environment variable directly as per coding guidelines.
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
     // Schema definition for strictly structured output
     const responseSchema = {
@@ -58,8 +54,10 @@ export const analyzeMenuImage = async (base64Image: string): Promise<MenuItem[]>
       Return a JSON array strictly following the schema.
     `;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+    // Updated model to gemini-3-flash-preview for multi-modal analysis tasks as per guidelines.
+    // Explicitly typing the response as GenerateContentResponse.
+    const response: GenerateContentResponse = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
       contents: {
         parts: [
           { inlineData: { mimeType: "image/jpeg", data: base64Image } },
@@ -72,12 +70,13 @@ export const analyzeMenuImage = async (base64Image: string): Promise<MenuItem[]>
       }
     });
 
+    // Directly accessing the .text property (not a method) as per guidelines.
     const data = JSON.parse(response.text || "[]");
     
-    // Map response to our MenuItem type
+    // Map response to our MenuItem type, ensuring categoryIds array is populated.
     return data.map((item: any, index: number) => ({
       id: `gen-${Date.now()}-${index}`,
-      category: item.category.toLowerCase().replace(/\s/g, '_'),
+      categoryIds: [item.category.toLowerCase().replace(/\s/g, '_')],
       price: item.price,
       name: {
         th: item.originalName,
