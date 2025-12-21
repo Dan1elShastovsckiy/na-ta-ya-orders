@@ -1,15 +1,11 @@
 
 // Standard modular Firebase imports for web SDK v9+
-// Fix: Re-asserting the named export 'initializeApp' from the standard 'firebase/app' package.
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, onValue, set } from 'firebase/database';
 import { MenuItem, Category } from '../types';
 
 /**
- * ИНСТРУКЦИЯ:
- * 1. Создайте проект на https://console.firebase.google.com/
- * 2. Включите Realtime Database (в режиме Test Mode)
- * 3. Скопируйте конфиг из настроек проекта и замените данные ниже
+ * Firebase configuration for Na-Ta-Ya Menu
  */
 const firebaseConfig = {
   apiKey: "AIzaSyC--HfMxrpkZ4RKxtHpS8CljLYj9W-fUcM",
@@ -23,13 +19,19 @@ const firebaseConfig = {
 };
 
 let db: any = null;
+
 try {
-  // Инициализация будет работать только если конфиг верный
-  if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "AIzaSyC--HfMxrpkZ4RKxtHpS8CljLYj9W-fUcM") {
+  // Проверяем, что ключ установлен и это не стандартная заглушка
+  const isKeySet = firebaseConfig.apiKey && 
+                   firebaseConfig.apiKey !== "ВАШ_API_KEY" && 
+                   firebaseConfig.apiKey.length > 10;
+
+  if (isKeySet) {
     const app = initializeApp(firebaseConfig);
     db = getDatabase(app);
+    console.log("Firebase initialized successfully");
   } else {
-    console.warn("Firebase credentials not set. Cloud sync disabled.");
+    console.warn("Firebase credentials not properly set. Cloud sync disabled.");
   }
 } catch (e) {
   console.error("Firebase init failed:", e);
@@ -37,7 +39,7 @@ try {
 
 export const syncDataWithCloud = async (menuItems: MenuItem[], categories: Category[]) => {
   if (!db) {
-    alert("Firebase не настроен! Проверьте ключи в services/firebaseService.ts");
+    alert("Firebase не настроен! Проверьте ключи в services/firebaseService.ts. Убедитесь, что apiKey заполнен верно.");
     return false;
   }
   try {

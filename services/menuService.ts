@@ -1,3 +1,4 @@
+
 // Use standard modular imports from @google/genai as per current guidelines.
 import { GoogleGenAI, Type, GenerateContentResponse } from "@google/genai";
 import { MenuItem } from '../types';
@@ -23,7 +24,8 @@ export const analyzeMenuImage = async (base64Image: string): Promise<MenuItem[]>
               ru: { type: Type.STRING },
               zh: { type: Type.STRING },
             },
-            required: ["en", "ru", "zh"]
+            required: ["en", "ru", "zh"],
+            propertyOrdering: ["en", "ru", "zh"]
           },
           descriptions: {
              type: Type.OBJECT,
@@ -33,11 +35,13 @@ export const analyzeMenuImage = async (base64Image: string): Promise<MenuItem[]>
               ru: { type: Type.STRING },
               zh: { type: Type.STRING },
             },
-            required: ["th", "en", "ru", "zh"]
+            required: ["th", "en", "ru", "zh"],
+            propertyOrdering: ["th", "en", "ru", "zh"]
           },
           isSpicy: { type: Type.BOOLEAN }
         },
-        required: ["originalName", "price", "category", "translations", "descriptions", "isSpicy"]
+        required: ["originalName", "price", "category", "translations", "descriptions", "isSpicy"],
+        propertyOrdering: ["originalName", "price", "category", "translations", "descriptions", "isSpicy"]
       }
     };
 
@@ -54,10 +58,10 @@ export const analyzeMenuImage = async (base64Image: string): Promise<MenuItem[]>
       Return a JSON array strictly following the schema.
     `;
 
-    // Updated model to gemini-3-flash-preview for multi-modal analysis tasks as per guidelines.
+    // Updated model to gemini-3-pro-preview for complex multi-modal analysis tasks as per guidelines.
     // Explicitly typing the response as GenerateContentResponse.
     const response: GenerateContentResponse = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-3-pro-preview",
       contents: {
         parts: [
           { inlineData: { mimeType: "image/jpeg", data: base64Image } },
